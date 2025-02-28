@@ -1,0 +1,88 @@
+-- Load plugins
+fs = plugin("lake.fs")
+process = plugin("lake.process")
+env = plugin("lake.env")
+logger = plugin("lake.logger")
+my_plugin = plugin("my_plugin") -- This will load the "my_plugin" plugin from "plugins/my_plugin.lua"
+
+-- Example functions
+-- "fs" (Filesystem) plugin demo
+function dummy_fs_demo()
+    fs.mkdir("test_dir")
+    print("Created directory 'test_dir'.")
+
+    fs.rmdir("test_dir")
+    print("Removed directory 'test_dir'.")
+
+    fs.copy("build.lake", "build.lake_copy")
+    print("Copied file 'build.lake' to 'build.lake_copy'.")
+
+    fs.rm("build.lake_copy")
+    print("Removed file 'build.lake_copy'.")
+
+    local exists = fs.exists("build.lake")
+    if exists then
+        print("File 'build.lake' exists.")
+    else
+        print("File 'build.lake' does not exist.")
+    end
+
+    local is_file = fs.is_file("build.lake")
+    if is_file then
+        print("File 'build.lake' is a file.")
+    else
+        print("File 'build.lake' is not a file.")
+    end
+
+    local is_dir = fs.is_dir("build.lake")
+    if is_dir then
+        print("File 'build.lake' is a directory.")
+    else
+        print("File 'build.lake' is not a directory.")
+    end
+
+    local files = fs.glob("src/*.rs")
+    for _, file in ipairs(files) do
+        print("Found file: " .. file)
+    end
+end
+
+-- "process" plugin demo.
+function dummy_process_demo()
+    local result = process.exec("whoami")
+    if result.status == 0 then
+        print("Command executed successfully.")
+    else
+        print("Command execution failed.")
+    end
+end
+
+-- "env" plugin demo.
+function dummy_env_demo()
+    local username = env.get("username")
+    print("Username: " .. username)
+
+    local os = env.os()
+    print("OS: " .. os)
+end
+
+--- "logger" plugin demo.
+function dummy_logger_demo()
+    logger.info("This is an info message.")
+    logger.debug("This is a debug message.")
+    logger.trace("This is a trace message.")
+    logger.warn("This is a warning message.")
+    logger.error("This is an error message.")
+end
+
+-- Create tasks
+task("default", function()
+    print("Hello, World!")
+
+    dummy_fs_demo()
+    dummy_process_demo()
+    dummy_env_demo()
+    dummy_logger_demo()
+
+    my_plugin.hello()
+end)

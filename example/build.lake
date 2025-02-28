@@ -1,0 +1,14 @@
+-- Load plugins
+fs = plugin("lake.fs")
+logger = plugin("lake.logger")
+my_plugin = plugin("my_plugin")
+
+-- Create tasks
+task("default", function()
+    print("Hello, World!")
+
+    fs.mkdir("build")
+    logger.info("This is an info message.")
+
+    my_plugin.hello()
+end)

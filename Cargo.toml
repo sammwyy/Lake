@@ -1,0 +1,22 @@
+[package]
+name = "lake"
+version = "0.1.0"
+edition = "2021"
+description = "Lake - A universal build system with Lua scripting"
+authors = ["Sammwy"]
+
+[dependencies]
+mlua = { version = "0.10.3", features = ["lua54", "vendored", "serialize"] }
+anyhow = "1.0"
+clap = { version = "4.5.31", features = ["derive"] }
+glob = "0.3"
+reqwest = { version = "0.12.12", features = ["blocking"] }
+thiserror = "2.0.11"
+log = "0.4.26"
+env_logger = "0.11.6"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
