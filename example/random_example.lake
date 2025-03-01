@@ -1,0 +1,17 @@
+-- Load plugin
+random = plugin("lake.random")
+
+-- Register main task
+task("default", function()
+    local rand_int = random.rnd_int(1, 10)
+    print("Random integer: " .. rand_int)
+
+    local rand_float = random.rnd_float(1.0, 10.0)
+    print("Random float: " .. rand_float)
+
+    local rand_string = random.rnd_string(10)
+    print("Random string: " .. rand_string)
+
+    local rand_bool = random.rnd_bool()
+    print("Random boolean: " .. tostring(rand_bool))
+end)

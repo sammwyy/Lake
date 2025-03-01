@@ -58,6 +58,18 @@ impl Plugin for EnvPlugin {
             })?,
         )?;
 
+        // cwd function
+        env.set(
+            "cwd",
+            lua.create_function(|_, ()| Ok(std::env::current_dir()?.display().to_string()))?,
+        )?;
+
+        // path_separator function
+        env.set(
+            "path_separator",
+            lua.create_function(|_, ()| Ok(std::path::MAIN_SEPARATOR.to_string()))?,
+        )?;
+
         globals.set("lake.env", env)?;
         Ok(())
     }

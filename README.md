@@ -12,12 +12,12 @@ Welcome to **Lake**, a flexible and powerful build system that simplifies buildi
 
 ## Table of Contents 📑
 
-- [Installation](#installation ⚙️)
-- [Usage](#usage 🏗️)
-  - [Running Tasks](#running-tasks 🎯)
-  - [Example Buildfile](#example-buildfile 📄)
-- [Contributing](#contributing 🤝)
-- [License](#license 📄)
+- [Installation](#installation-⚙️)
+- [Usage](#usage-🏗️)
+  - [Running Tasks](#running-tasks-🎯)
+  - [Example Buildfile](#example-buildfile-📄)
+- [Contributing](#contributing-🤝)
+- [License](#license-📄)
 
 ## Installation ⚙️
 
@@ -32,7 +32,7 @@ Make sure you have **Rust** installed. You can get it from [rust-lang.org](https
 Clone the project repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/lake.git
+git clone https://github.com/sammwyy/lake.git
 cd lake
 ```
 

@@ -1,0 +1,11 @@
+-- Load plugin
+logger = plugin("lake.logger")
+
+-- Register main task
+task("default", function()
+    logger.info("This is an info message.")
+    logger.debug("This is a debug message.")
+    logger.trace("This is a trace message.")
+    logger.warn("This is a warning message.")
+    logger.error("This is an error message.")
+end)

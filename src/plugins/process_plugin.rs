@@ -64,10 +64,10 @@ impl Plugin for ProcessPlugin {
             })?,
         )?;
 
-        // exec_piped function - Execute command and return handle
+        // spawn function (returns pid)
         process.set(
-            "exec_piped",
-            lua.create_function(|lua, (cmd, args): (String, Option<Table>)| {
+            "spawn",
+            lua.create_function(|_, (cmd, args): (String, Option<Table>)| {
                 let args_vec: Vec<String> = match args {
                     Some(args_table) => {
                         let mut result = Vec::new();
@@ -81,25 +81,17 @@ impl Plugin for ProcessPlugin {
                     None => Vec::new(),
                 };
 
-                let child = Command::new(&cmd)
+                let output = Command::new(&cmd)
                     .args(&args_vec)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped())
                     .spawn();
 
-                match child {
-                    Ok(_) => {
-                        // In a real implementation, we'd return a handle that allows
-                        // reading from stdout/stderr and checking status
-                        let result = lua.create_table()?;
-                        result.set("pid", 0)?; // Placeholder
-                        Ok(result)
-                    }
+                match output {
+                    Ok(output) => Ok(output.id() as i32),
                     Err(e) => {
                         log::error!("Error executing process: {}", e);
-                        let result = lua.create_table()?;
-                        result.set("pid", -1)?;
-                        Ok(result)
+                        Ok(-1)
                     }
                 }
             })?,

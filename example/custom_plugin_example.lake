@@ -1,0 +1,7 @@
+-- Load custom plugin
+my_plugin = plugin("my_plugin")
+
+-- Create tasks
+task("default", function()
+    my_plugin.hello()
+end)

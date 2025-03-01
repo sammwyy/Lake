@@ -1,0 +1,9 @@
+-- Load plugin
+net = plugin("lake.net")
+
+-- Register main task
+task("default", function()
+    local res = net.http_get("https://httpbin.org/get")
+    print("HTTP GET Request: " .. res.status)
+    print(res.body)
+end)

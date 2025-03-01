@@ -1,0 +1,32 @@
+-- Load plugin
+crypto = plugin("lake.crypto")
+
+-- Register main task
+task("default", function()
+    local raw_text = "Hello World";
+    
+    -- Hashing
+    print("Testing hash functions:")
+
+    local as_sha256 = crypto.hash_sha256(raw_text)
+    print(" - SHA256: " .. as_sha256)
+
+    local as_sha512 = crypto.hash_sha512(raw_text)
+    print(" - SHA512: " .. as_sha512)
+
+    local as_md5 = crypto.hash_md5(raw_text)
+    print(" - MD5: " .. as_md5)
+
+    -- Encoding
+    print("\nTesting encoding functions:")
+    local as_b64 = crypto.to_base64(raw_text)
+    print(" - Base64: " .. as_b64)
+
+    local from_b64 = crypto.from_base64_str(as_b64)
+    print(" - From Base64: " .. tostring(from_b64))
+
+    -- Generation
+    print("\nTesting generation functions:")
+    local uuid = crypto.uuid_v4()
+    print(" - UUID v4: " .. uuid)
+end)

@@ -1,0 +1,11 @@
+-- Load plugin
+process = plugin("lake.process")
+
+-- Register main task
+task("default", function()
+    local whoami = process.exec("whoami")
+    print("Whoami: " .. whoami.stdout)
+
+    local pid = process.spawn("whoami")
+    print("PID: " .. pid)
+end)

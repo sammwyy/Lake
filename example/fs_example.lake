@@ -1,0 +1,43 @@
+-- Load plugin
+fs = plugin("lake.fs")
+
+-- Register main task
+task("default", function()
+    fs.mkdir("test_dir")
+    print("Created directory 'test_dir'.")
+
+    fs.rmdir("test_dir")
+    print("Removed directory 'test_dir'.")
+
+    fs.copy("build.lake", "build.lake_copy")
+    print("Copied file 'build.lake' to 'build.lake_copy'.")
+
+    fs.rm("build.lake_copy")
+    print("Removed file 'build.lake_copy'.")
+
+    local exists = fs.exists("build.lake")
+    if exists then
+        print("File 'build.lake' exists.")
+    else
+        print("File 'build.lake' does not exist.")
+    end
+
+    local is_file = fs.is_file("build.lake")
+    if is_file then
+        print("File 'build.lake' is a file.")
+    else
+        print("File 'build.lake' is not a file.")
+    end
+
+    local is_dir = fs.is_dir("build.lake")
+    if is_dir then
+        print("File 'build.lake' is a directory.")
+    else
+        print("File 'build.lake' is not a directory.")
+    end
+
+    local files = fs.glob("../src/*.rs")
+    for _, file in ipairs(files) do
+        print("Found file: " .. file)
+    end
+end)

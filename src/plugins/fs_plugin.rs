@@ -3,7 +3,7 @@
 //! Provides file and directory operations.
 
 use crate::plugins::Plugin;
-use mlua::{Lua, Result as LuaResult};
+use mlua::{Error as LuaError, Lua, Result as LuaResult};
 use std::path::Path;
 
 pub struct FsPlugin;
@@ -14,6 +14,11 @@ impl FsPlugin {
     }
 }
 
+fn to_lua_error<E: std::error::Error + Send + Sync + 'static>(e: E, context: &str) -> LuaError {
+    log::error!("{}: {}", context, e);
+    LuaError::RuntimeError(format!("{}: {}", context, e))
+}
+
 impl Plugin for FsPlugin {
     fn register(&self, lua: &Lua) -> LuaResult<()> {
         let globals = lua.globals();
@@ -22,12 +27,10 @@ impl Plugin for FsPlugin {
         // mkdir function
         fs.set(
             "mkdir",
-            lua.create_function(|_, path: String| match std::fs::create_dir_all(&path) {
-                Ok(_) => Ok(true),
-                Err(e) => {
-                    log::error!("Error creating directory {}: {}", path, e);
-                    Ok(false)
-                }
+            lua.create_function(|_, path: String| {
+                std::fs::create_dir_all(&path)
+                    .map(|_| true)
+                    .map_err(|e| to_lua_error(e, &format!("Error creating directory {}", path)))
             })?,
         )?;
 
@@ -37,15 +40,11 @@ impl Plugin for FsPlugin {
             lua.create_function(|_, path: String| {
                 let path = Path::new(&path);
                 if path.exists() {
-                    match std::fs::remove_dir_all(path) {
-                        Ok(_) => Ok(true),
-                        Err(e) => {
-                            log::error!("Error removing directory {:?}: {}", path, e);
-                            Ok(false)
-                        }
-                    }
+                    std::fs::remove_dir_all(path).map(|_| true).map_err(|e| {
+                        to_lua_error(e, &format!("Error removing directory {:?}", path))
+                    })
                 } else {
-                    Ok(true) // Directory doesn't exist, consider it success
+                    Ok(true)
                 }
             })?,
         )?;
@@ -53,12 +52,10 @@ impl Plugin for FsPlugin {
         // rm function
         fs.set(
             "rm",
-            lua.create_function(|_, path: String| match std::fs::remove_file(&path) {
-                Ok(_) => Ok(true),
-                Err(e) => {
-                    log::error!("Error removing file {}: {}", path, e);
-                    Ok(false)
-                }
+            lua.create_function(|_, path: String| {
+                std::fs::remove_file(&path)
+                    .map(|_| true)
+                    .map_err(|e| to_lua_error(e, &format!("Error removing file {}", path)))
             })?,
         )?;
 
@@ -66,29 +63,25 @@ impl Plugin for FsPlugin {
         fs.set(
             "copy",
             lua.create_function(|_, (src, dst): (String, String)| {
-                match std::fs::copy(&src, &dst) {
-                    Ok(_) => Ok(true),
-                    Err(e) => {
-                        log::error!("Error copying {} to {}: {}", src, dst, e);
-                        Ok(false)
-                    }
-                }
+                std::fs::copy(&src, &dst)
+                    .map(|_| true)
+                    .map_err(|e| to_lua_error(e, &format!("Error copying {} to {}", src, dst)))
             })?,
         )?;
 
-        // exists function
+        // exists function (no errors to propagate)
         fs.set(
             "exists",
             lua.create_function(|_, path: String| Ok(Path::new(&path).exists()))?,
         )?;
 
-        // is_file function
+        // is_file function (no errors to propagate)
         fs.set(
             "is_file",
             lua.create_function(|_, path: String| Ok(Path::new(&path).is_file()))?,
         )?;
 
-        // is_dir function
+        // is_dir function (no errors to propagate)
         fs.set(
             "is_dir",
             lua.create_function(|_, path: String| Ok(Path::new(&path).is_dir()))?,
@@ -97,25 +90,64 @@ impl Plugin for FsPlugin {
         // glob function
         fs.set(
             "glob",
-            lua.create_function(|lua, pattern: String| match glob::glob(&pattern) {
-                Ok(entries) => {
-                    let result_table = lua.create_table()?;
-                    for (i, entry) in entries.enumerate() {
-                        match entry {
-                            Ok(path) => {
-                                result_table.set(i + 1, path.to_string_lossy().to_string())?;
-                            }
-                            Err(e) => {
-                                log::error!("Error in glob pattern: {:?}", e);
-                            }
+            lua.create_function(|lua, pattern: String| {
+                let entries = glob::glob(&pattern).map_err(|e| {
+                    to_lua_error(e, &format!("Invalid glob pattern: {:?}", pattern))
+                })?;
+
+                let result_table = lua.create_table()?;
+                for (i, entry) in entries.enumerate() {
+                    match entry {
+                        Ok(path) => {
+                            result_table.set(i + 1, path.to_string_lossy().to_string())?;
+                        }
+                        Err(e) => {
+                            return Err(to_lua_error(e, "Error in glob pattern"));
                         }
                     }
-                    Ok(result_table)
                 }
-                Err(e) => {
-                    log::error!("Invalid glob pattern: {:?}", e);
-                    Ok(lua.create_table()?)
+                Ok(result_table)
+            })?,
+        )?;
+
+        // read_file function
+        fs.set(
+            "read_file",
+            lua.create_function(|_, path: String| {
+                std::fs::read_to_string(&path)
+                    .map_err(|e| to_lua_error(e, &format!("Error reading file {}", path)))
+            })?,
+        )?;
+
+        // write_file function
+        fs.set(
+            "write_file",
+            lua.create_function(|_, (path, content): (String, String)| {
+                std::fs::write(&path, content)
+                    .map(|_| true)
+                    .map_err(|e| to_lua_error(e, &format!("Error writing file {}", path)))
+            })?,
+        )?;
+
+        // list_dir function
+        fs.set(
+            "list_dir",
+            lua.create_function(|lua, path: String| {
+                let entries = std::fs::read_dir(&path)
+                    .map_err(|e| to_lua_error(e, &format!("Error listing directory {}", path)))?;
+
+                let result_table = lua.create_table()?;
+                for (i, entry) in entries.enumerate() {
+                    match entry {
+                        Ok(entry) => {
+                            result_table.set(i + 1, entry.path().to_string_lossy().to_string())?;
+                        }
+                        Err(e) => {
+                            return Err(to_lua_error(e, "Error reading directory entry"));
+                        }
+                    }
                 }
+                Ok(result_table)
             })?,
         )?;
 

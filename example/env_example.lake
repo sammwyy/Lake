@@ -1,0 +1,17 @@
+-- Load plugin
+env = plugin("lake.env")
+
+-- Register main task
+task("default", function()
+    local username = env.get("username")
+    print("(Env) Username: " .. username)
+    
+    local os = env.os()
+    print("OS: " .. os)
+
+    local cwd = env.cwd()
+    print("CWD: " .. cwd)
+
+    local separator = env.path_separator()
+    print("Path separator: " .. separator)
+end)
